@@ -148,7 +148,6 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=udapeople" \
               --output text >> .circleci/ansible/inventory.txt
-            cat .circleci/ansible/inventory.txt
       - run: yum -y install tar gzip
       - persist_to_workspace:
           root: ~/
@@ -161,18 +160,29 @@ jobs:
       - image: python:3.9.1-alpine3.12
     steps:
       - checkout
-      # Add ssh keys with fingerprint
-      # attach workspace
+      - add_ssh_keys:
+          fingerprints: ["b1:12:19:01:01:a8:e1:ec:13:a4:95:45:83:f4:16:4b"]
+      - attach_workspace:
+          at: ~/
       - run:
           name: Install dependencies
           command: |
-            # Your code here
-            exit 1
+            apk add --update ansible
       - run:
           name: Configure server
           command: |
-            # Your code here
-            exit 1
+            echo ENVIRONMENT=production > "backend/.env"
+            echo NODE_ENV=production >> "backend/.env"
+            echo TYPEORM_CONNECTION=postgres >> "backend/.env"
+            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "backend/.env"
+            echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
+            echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
+            ansible-playbook \
+              -i .circleci/ansible/inventory.txt \
+              .circleci/ansible/configure-server.yml
       # Here's where you will add some code to rollback on failure      
 
   run-migrations:
