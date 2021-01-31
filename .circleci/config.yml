@@ -228,7 +228,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update curl nodejs npm
+            apk add --update curl nodejs npm tar
       - run:
           name: Get backend url
           command: |
@@ -266,8 +266,7 @@ jobs:
       - run:
           name: Deploy backend
           command: |
-            cd /home
-            tar czf backend.tar.gz -P ~/project/backend/dist
+            tar czf /home/backend.tar.gz -P backend/dist
             export ANSIBLE_HOST_KEY_CHECKING=False
             ansible-playbook \
               -i .circleci/ansible/inventory.txt \
