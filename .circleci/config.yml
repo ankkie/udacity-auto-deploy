@@ -364,7 +364,7 @@ jobs:
       - run:
           name: Get old stack workflow id
           command: |
-            export OldWorkflowID=$(curl -H "token:${CIRCLE_WORKFLOW_ID:0:7}" --request GET https://api.memstash.io/values/old_workflow_id_${CIRCLE_WORKFLOW_ID:0:7}
+            export OldWorkflowID=$(curl -H "token:${CIRCLE_WORKFLOW_ID:0:7}" --request GET https://api.memstash.io/values/old_workflow_id_${CIRCLE_WORKFLOW_ID:0:7})
             echo "Old Workflow ID: ${OldWorkflowID}"
       - run:
           name: Remove old stacks and files
