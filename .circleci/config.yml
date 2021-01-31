@@ -269,7 +269,8 @@ jobs:
       - run:
           name: Deploy backend
           command: |
-            tar czf /home/backend.tar.gz -P backend/dist
+            cd /home
+            tar czf backend.tar.gz -P /home/circleci/project/backend/dist
             export ANSIBLE_HOST_KEY_CHECKING=False
             ansible-playbook \
               -i .circleci/ansible/inventory.txt \
