@@ -216,6 +216,7 @@ jobs:
               --request PUT --data "1" \
               https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
       - revert-migrations
+      - destroy-environment
 
   deploy-frontend:
     docker:
@@ -266,7 +267,7 @@ jobs:
           name: Deploy backend
           command: |
             cd /home
-            tar czf backend.tar.gz -P /home/circleci/project/backend/dist
+            tar czf backend.tar.gz -P ~/project/backend/dist
             export ANSIBLE_HOST_KEY_CHECKING=False
             ansible-playbook \
               -i .circleci/ansible/inventory.txt \
