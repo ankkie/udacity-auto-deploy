@@ -36,7 +36,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build2]
+          keys: [frontend_build]
       - run:
           name: Build frontend
           command: |
@@ -45,7 +45,7 @@ jobs:
             npm run build
       - save_cache:
           paths: [frontend/node_modules]
-          key: frontend-build2
+          key: frontend_build
 
   build-backend:
     docker:
@@ -53,7 +53,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build3]
+          keys: [backend_build]
       - run:
           name: Build backend
           command: |
@@ -62,7 +62,10 @@ jobs:
             npm run build
       - save_cache:
           paths: [backend/node_modules]
-          key: backend-build3
+          key: backend_build
+      - save_cache:
+          paths: [backend/dist]
+          key: backend_dist
 
   test-frontend:
     docker:
@@ -70,7 +73,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build2]
+          keys: [frontend_build]
       - run:
           name: Test frontend
           command: |
@@ -83,7 +86,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build3]
+          keys: [backend_build]
       - run:
           name: Test backend
           command: |
@@ -96,7 +99,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-build2]
+          keys: [frontend_build]
       - run:
           name: Scan frontend
           command: |
@@ -109,7 +112,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build3]
+          keys: [backend_build]
       - run:
           name: Scan backend
           command: |
@@ -188,7 +191,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend-build3]
+          keys: [backend_build]
       - run:
           name: Run migrations
           command: |
@@ -223,12 +226,12 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
-      - attach_workspace:
-          at: ~/
       - run:
           name: Install dependencies
           command: |
             apk add --update curl nodejs npm tar
+      - attach_workspace:
+          at: ~/
       - run:
           name: Get backend url
           command: |
@@ -253,7 +256,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: ["backend-build3"]
+          keys: ["backend_dist"]
       - attach_workspace:
           at: ~/
       - add_ssh_keys:
