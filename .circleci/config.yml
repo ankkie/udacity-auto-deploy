@@ -36,7 +36,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend_build_v3]
+          keys: [frontend_build_v4]
       - run:
           name: Build frontend
           command: |
@@ -45,7 +45,7 @@ jobs:
             npm run build
       - save_cache:
           paths: [frontend/node_modules]
-          key: frontend_build_v3
+          key: frontend_build_v4
 
   build-backend:
     docker:
@@ -53,7 +53,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend_build_v3]
+          keys: [backend_build_v4]
       - run:
           name: Build backend
           command: |
@@ -62,10 +62,10 @@ jobs:
             npm run build
       - save_cache:
           paths: [backend/node_modules]
-          key: backend_build_v3
+          key: backend_build_v4
       - save_cache:
           paths: [backend/dist]
-          key: backend_dist_v3
+          key: backend_dist_v4
 
   test-frontend:
     docker:
@@ -73,7 +73,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend_build_v3]
+          keys: [frontend_build_v4]
       - run:
           name: Test frontend
           command: |
@@ -86,7 +86,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend_build_v3]
+          keys: [backend_build_v4]
       - run:
           name: Test backend
           command: |
@@ -99,7 +99,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend_build_v3]
+          keys: [frontend_build_v4]
       - run:
           name: Scan frontend
           command: |
@@ -112,7 +112,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend_build_v3]
+          keys: [backend_build_v4]
       - run:
           name: Scan backend
           command: |
@@ -191,7 +191,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [backend_build_v3]
+          keys: [backend_build_v4]
       - run:
           name: Run migrations
           command: |
@@ -259,7 +259,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: ["backend_dist_v3"]
+          keys: ["backend_dist_v4"]
       - attach_workspace:
           at: ~/
       - add_ssh_keys:
