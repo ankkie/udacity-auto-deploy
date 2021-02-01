@@ -304,7 +304,7 @@ jobs:
       - run:
           name: Backend smoke test.
           command: |
-            API_URL=`cat .circleci/backend_url.txt`
+            API_URL=`cat .circleci/backend_public_url.txt`
             echo $API_URL
             curl -s $API_URL/api/status
       - run:
