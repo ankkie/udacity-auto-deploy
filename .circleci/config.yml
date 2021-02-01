@@ -144,7 +144,7 @@ jobs:
               --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --output text)
-            echo "http://$BACKEND_PUBLIC_IP:3030" >> .circleci/outputs/backend_public_url.txt
+            echo "http://$BACKEND_PUBLIC_IP:3030" >> .circleci/backend_public_url.txt
             echo "[all]" >> .circleci/ansible/inventory.txt
             echo "$BACKEND_PUBLIC_IP" >> .circleci/ansible/inventory.txt
 
@@ -152,7 +152,7 @@ jobs:
       - persist_to_workspace:
           root: ~/
           paths:
-            - project/.circleci/outputs/backend_public_url.txt
+            - project/.circleci/backend_public_url.txt
             - project/.circleci/ansible/inventory.txt
       - destroy-environment
 
@@ -230,25 +230,20 @@ jobs:
       - image: python:3.9.1-alpine3.12
     steps:
       - checkout
+      - attach_workspace:
+          at: ~/
       - run:
           name: Install dependencies
           command: |
             apk add --update curl nodejs npm tar
             pip install awscli
-            cd frontend
-            npm install
-      - attach_workspace:
-          at: ~/
-      - run:
-          name: Get backend url
-          command: |
-            export BACKEND_IP=$(sed -n 2p .circleci/ansible/inventory.txt)
-            export API_URL="http://${BACKEND_IP}:3030"
-            echo "${API_URL}"
       - run:
           name: Build frontend
           command: |
-            cd frontend
+            export API_URL=`cat .circleci/backend_public_url.txt`
+            echo "API_URL: $API_URL"
+            cd ~/project/frontend
+            npm install
             npm run build
       - run:
           name: Deploy frontend objects
@@ -307,18 +302,11 @@ jobs:
       - attach_workspace:
           at: ~/
       - run:
-          name: Get backend url
-          command: |
-            export BACKEND_URL=$(sed -n 2p .circleci/ansible/inventory.txt)
-      - run:
           name: Backend smoke test.
           command: |
-            if curl -s https://${BACKEND_URL}:3030/api/status
-            then
-              return 1
-            else
-              return 0
-            fi
+            API_URL=`cat .circleci/backend_url.txt`
+            echo $API_URL
+            curl -s $API_URL/api/status
       - run:
           name: Frontend smoke test.
           command: |
@@ -406,13 +394,13 @@ workflows:
           requires: [deploy-infrastructure]
       - run-migrations:
           requires: [configure-infrastructure]
-      # - deploy-frontend:
-      #     requires: [run-migrations]
-      # - deploy-backend:
-      #     requires: [run-migrations]
-      # - smoke-test:
-      #     requires: [deploy-backend, deploy-frontend]
-      # - cloudfront-update:
-      #     requires: [smoke-test]
-      # - cleanup:
-      #     requires: [cloudfront-update]
+      - deploy-frontend:
+          requires: [run-migrations]
+      - deploy-backend:
+          requires: [run-migrations]
+      - smoke-test:
+          requires: [deploy-backend, deploy-frontend]
+      - cloudfront-update:
+          requires: [smoke-test]
+      - cleanup:
+          requires: [cloudfront-update]
