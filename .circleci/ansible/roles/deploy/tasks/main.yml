@@ -1,15 +1,34 @@
-- name: Get backend files
-  become: true
-  copy:
-    src: /home/backend.tar.gz
-    dest: /home/ubuntu/backend.tar.gz
+---
+- name: "Creates backend app directory"
+  file:
+    path: ~/backend_app
+    state: directory
 
-- name: Executing node
+- name: "Copy compiled backend app"
+  copy:
+    src: dist.zip
+    dest: "~/backend_app/dist.zip"
+
+- name: "Unzip backend files to correct directory"
   shell: |
-    cd /home/ubuntu/
-    tar xzvf backend.tar.gz
-    mv home/circleci/project/backend .
-    cd backend
+    cd ~/backend_app
+    unzip dist.zip
+    rm -rf dist.zip
+- name: "Install dependencies for project"
+  shell: |
+    cd ~/backend_app
     npm install
-    npm run build
-    pm2 start npm --name backend -- start
+- name: "Executing node"
+  shell: |
+    export
+    cd ~/backend_app
+    pm2 start main.js
+  register: execute_node
+
+- name: print message
+  debug:
+    msg: "{{ execute_node.stdout_lines }}"
+
+- name: "Configure pm2 to start as service"
+  shell: |
+    env PATH=$PATH:/usr/local/bin pm2 startup -u ubuntu
