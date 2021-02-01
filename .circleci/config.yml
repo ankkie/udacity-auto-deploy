@@ -136,17 +136,23 @@ jobs:
               --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:7} \
               --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7} \
               --tags project=udapeople
+
       - run:
           name: Add backend ip to ansible inventory
           command: |
-            aws ec2 describe-instances \
+            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=udapeople" \
-              --output text >> .circleci/ansible/inventory.txt
+              --output text)
+            echo "http://$BACKEND_PUBLIC_IP:3030" >> .circleci/outputs/backend_public_url.txt
+            echo "[all]" >> .circleci/ansible/inventory.txt
+            echo "$BACKEND_PUBLIC_IP" >> .circleci/ansible/inventory.txt
+
       - run: yum -y install tar gzip
       - persist_to_workspace:
           root: ~/
           paths:
+            - project/.circleci/outputs/backend_public_url.txt
             - project/.circleci/ansible/inventory.txt
       - destroy-environment
 
@@ -162,7 +168,8 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apk add --update ansible
+            apk add --update curl nodejs npm ansible zip
+            pip install awscli
       - run:
           name: Configure server
           command: |
@@ -170,6 +177,8 @@ jobs:
             echo NODE_ENV=production >> "backend/.env"
             echo TYPEORM_CONNECTION=postgres >> "backend/.env"
             echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "backend/.env"
+            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "backend/.env"
+            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
             echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
             echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
             echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
@@ -185,8 +194,8 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - restore_cache:
-          keys: [backend_build_v5]
+      - attach_workspace:
+          at: ~/
       - run:
           name: Run migrations
           command: |
@@ -388,15 +397,15 @@ workflows:
           requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
-      # - deploy-infrastructure:
-      #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-      #     filters:
-      #       branches:
-      #         only: [main]
-      # - configure-infrastructure:
-      #     requires: [deploy-infrastructure]
-      # - run-migrations:
-      #     requires: [configure-infrastructure]
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+          filters:
+            branches:
+              only: [main]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+      - run-migrations:
+          requires: [configure-infrastructure]
       # - deploy-frontend:
       #     requires: [run-migrations]
       # - deploy-backend:
