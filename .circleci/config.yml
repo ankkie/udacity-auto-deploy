@@ -35,42 +35,40 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - restore_cache:
-          keys: [frontend_build_v5]
       - run:
           name: Build frontend
           command: |
             cd frontend
             npm install
             npm run build
-      - save_cache:
-          paths: [frontend/node_modules]
-          key: frontend_build_v5
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/frontend/node_modules
 
   build-backend:
     docker:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - restore_cache:
-          keys: [backend_build_v5]
       - run:
           name: Build backend
           command: |
             cd backend
             npm install
             npm run build
-      - save_cache:
-          paths: [backend/node_modules]
-          key: backend_build_v5
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/backend/node_modules
 
   test-frontend:
     docker:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - restore_cache:
-          keys: [frontend_build_v5]
+      - attach_workspace:
+          at: ~/
       - run:
           name: Test frontend
           command: |
@@ -82,8 +80,8 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - restore_cache:
-          keys: [backend_build_v5]
+      - attach_workspace:
+          at: ~/
       - run:
           name: Test backend
           command: |
@@ -95,8 +93,8 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - restore_cache:
-          keys: [frontend_build_v5]
+      - attach_workspace:
+          at: ~/
       - run:
           name: Scan frontend
           command: |
@@ -108,8 +106,8 @@ jobs:
       - image: circleci/node:13.8.0
     steps:
       - checkout
-      - restore_cache:
-          keys: [backend_build_v5]
+      - attach_workspace:
+          at: ~/
       - run:
           name: Scan backend
           command: |
@@ -390,22 +388,22 @@ workflows:
           requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
-      - deploy-infrastructure:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-          filters:
-            branches:
-              only: [main]
-      - configure-infrastructure:
-          requires: [deploy-infrastructure]
-      - run-migrations:
-          requires: [configure-infrastructure]
-      - deploy-frontend:
-          requires: [run-migrations]
-      - deploy-backend:
-          requires: [run-migrations]
-      - smoke-test:
-          requires: [deploy-backend, deploy-frontend]
-      - cloudfront-update:
-          requires: [smoke-test]
-      - cleanup:
-          requires: [cloudfront-update]
+      # - deploy-infrastructure:
+      #     requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+      #     filters:
+      #       branches:
+      #         only: [main]
+      # - configure-infrastructure:
+      #     requires: [deploy-infrastructure]
+      # - run-migrations:
+      #     requires: [configure-infrastructure]
+      # - deploy-frontend:
+      #     requires: [run-migrations]
+      # - deploy-backend:
+      #     requires: [run-migrations]
+      # - smoke-test:
+      #     requires: [deploy-backend, deploy-frontend]
+      # - cloudfront-update:
+      #     requires: [smoke-test]
+      # - cleanup:
+      #     requires: [cloudfront-update]
